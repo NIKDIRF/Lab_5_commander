@@ -1,0 +1,2 @@
+execute_script
+D:\progger\GitHub\lab5_commander\src\com\itmo\json\script1.txt
