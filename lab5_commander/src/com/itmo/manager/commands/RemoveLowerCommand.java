@@ -13,4 +13,9 @@ public class RemoveLowerCommand implements Command{
     public void execute() {
         this.receiver.removeLower();
     }
+
+    @Override
+    public void execute(String argument) {
+
+    }
 }

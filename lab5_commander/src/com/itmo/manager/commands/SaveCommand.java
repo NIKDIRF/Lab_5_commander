@@ -13,4 +13,9 @@ public class SaveCommand implements Command {
     public void execute() {
         this.receiver.save();
     }
+
+    @Override
+    public void execute(String argument) {
+
+    }
 }

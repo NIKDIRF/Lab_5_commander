@@ -13,4 +13,9 @@ public class HelpCommand implements Command{
     public void execute() {
         this.receiver.help();
     }
+
+    @Override
+    public void execute(String argument) {
+
+    }
 }

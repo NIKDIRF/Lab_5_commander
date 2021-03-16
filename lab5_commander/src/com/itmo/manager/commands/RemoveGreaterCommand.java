@@ -13,4 +13,9 @@ public class RemoveGreaterCommand implements Command{
     public void execute() {
         this.receiver.removeGreater();
     }
+
+    @Override
+    public void execute(String argument) {
+
+    }
 }

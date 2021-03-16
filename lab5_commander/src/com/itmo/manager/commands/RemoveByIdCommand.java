@@ -11,6 +11,11 @@ public class RemoveByIdCommand implements Command{
 
     @Override
     public void execute() {
-        this.receiver.removeById();
+
+    }
+
+    @Override
+    public void execute(String argument) {
+        this.receiver.removeById(argument);
     }
 }

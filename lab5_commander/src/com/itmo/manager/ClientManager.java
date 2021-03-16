@@ -8,18 +8,17 @@ import com.itmo.studyStream.studyGroup.StudyGroup;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.TreeSet;
 
 public class ClientManager {
     private static StudyStream studyStream;
-    private static HashSet<File> infinityControl = new HashSet<File>();
+    private static HashSet<File> infinityControl;
     private Receiver receiver;
     private ClientManager branch;
     private boolean scriptState;
     private File script;
     private static FlexibleReader reader = new FlexibleReader();
+    private FlexibleReader recReader;
     private boolean whileParam;
 
     //      инициализация экземпляров команд
@@ -44,9 +43,9 @@ public class ClientManager {
 
     public ClientManager(StudyStream studyStream) {
         ClientManager.studyStream = studyStream;
+        infinityControl = new HashSet<File>();
         this.receiver = new Receiver(false, getSource());
         this.scriptState = false;
-
         this.exit = new ExitCommand(receiver);
         this.add = new AddCommand(receiver);
         this.removeById = new RemoveByIdCommand(receiver);
@@ -67,10 +66,13 @@ public class ClientManager {
                 removeLower, show, printAscending, printUniqueExpelledStudents, printFieldDescendingFormOfEducation);
     }
 
-    public ClientManager(File script) throws FileNotFoundException {
+    public ClientManager(File script, FlexibleReader recReader) throws FileNotFoundException {
+        infinityControl.add(script);
         this.scriptState = true;
         this.receiver = new Receiver(true, getSource());
         this.script = script;
+
+        this.recReader = recReader;
         this.reader = new FlexibleReader(new FileInputStream(script));
 
         this.exit = new ExitCommand(receiver);
@@ -101,34 +103,29 @@ public class ClientManager {
     public void run() {
         whileParam = true;
 
-        System.out.println("вход в ран");
 
         if (!scriptState) {
             reader = new FlexibleReader();
-
-            System.out.println("обычный ввод");
-
         }
 
         while (whileParam) {
-            System.out.println("while открыт");
-
 
             if (scriptState) {
                 if (reader.hasNext()) {
                     nextCommand = reader.ReadString();
                 } else {
+                    whileParam = false;
                     break;
                 }
             } else {
                 reader = new FlexibleReader();
                 nextCommand = reader.ReadString();
-                System.out.println("считал команду");
             }
 
+            String arr[] = nextCommand.split(" ", 2);
 
             try {
-                switch (nextCommand.toLowerCase()) {
+                switch (arr[0].toLowerCase()) {
                     case ("exit") :
                         root.exit();
                         break;
@@ -136,7 +133,7 @@ public class ClientManager {
                         root.add();
                         break;
                     case ("remove_by_id") :
-                        root.removeById();
+                        root.removeById(arr[1]);
                         break;
                     case ("clear") :
                         root.clear();
@@ -151,7 +148,7 @@ public class ClientManager {
                         root.info();
                         break;
                     case ("update") :
-                        root.update();
+                        root.update(arr[1]);
                         break;
                     case ("add_if_max") :
                         root.addIfMax();
@@ -177,16 +174,20 @@ public class ClientManager {
                     case ("execute_script") :
                         try {
 
-                            script = new File(reader.ReadString());
-                            this.branch = new ClientManager(script);
-                            System.out.println("скрипт подьехал");
+                            try {
+                                script = new File(arr[1]);
+                            } catch (ArrayIndexOutOfBoundsException ex) {
+                                throw new FileNotFoundException();
+                            }
+
                             if (infinityControl.contains(script)) {
                                 System.out.println("Исполнение скрипт файла " + script.toString() + "вызовет бесконечный цикл. Скрипта не будет.");
                             } else {
-                                System.out.println("!!!!");
+                                recReader = reader;
+                                this.branch = new ClientManager(script, reader);
                                 infinityControl.add(script);
-                                System.out.println("????");
                                 branch.run();
+                                reader = recReader;
                                 infinityControl.remove(script);
                             }
 
@@ -209,64 +210,6 @@ public class ClientManager {
 
     }
 
-//    public static void setStudyStream(StudyStream studyStream) {
-//        ClientManager.studyStream = studyStream;
-//    }
-
-    /**
-     * Помещает группу в поток студентов.
-     * @param studyGroup Группа которая будет помещена в поток студентов.
-     */
-    public static void addToStudyStream(StudyGroup studyGroup) {
-        ClientManager.studyStream.add(studyGroup);
-    }
-
-    /**
-     * Удаляет группу из потока студентов.
-     * @param studyGroup
-     */
-    public static void removeFromStudyStream(StudyGroup studyGroup) {
-        ClientManager.studyStream.remove(studyGroup);
-    }
-
-    /**
-     * Возвращает поток студентов в виде коллекции.
-     * @return Возвращаемая коллекция.
-     */
-    public static Collection<StudyGroup> getCollection() {
-        return ClientManager.studyStream.getCollection();
-    }
-
-    /**
-     * Возвращает поток студентов в виде отсортированной коллекции.
-     * @return Возвращаемая коллекция.
-     */
-    public static TreeSet<StudyGroup> getSortedCollection() {
-        return ClientManager.studyStream.sortedCollection();
-    }
-
-    /**
-     * Возвращает множество уникальных значенй в виде коллекции.
-     * @return Возвращаемая коллекция.
-     */
-    public static Collection<Long> getUnique() {
-        return ClientManager.studyStream.getUnique();
-    }
-
-    /**
-     * Очищает поток студентов.
-     */
-    public static void clearStudyStream() {
-        ClientManager.studyStream.clear();
-    }
-
-    /**
-     * Выводит информацию о потоке студентов.
-     */
-    public static void collectionInfo() {
-        ClientManager.studyStream.collectionInfo();
-    }
-
     /**
      * Обновляет источник ввода.
      */
@@ -281,15 +224,6 @@ public class ClientManager {
     public static StudyGroup readElement() {
         return ClientManager.reader.readElement();
     }
-
-    /**
-     * Возвращает считанное число.
-     * @return Возвращаемое число.
-     */
-    public static Integer readInteger() {
-        return ClientManager.reader.ReadInteger();
-    }
-
 
     /**
      * Возвращем исходный json файл.

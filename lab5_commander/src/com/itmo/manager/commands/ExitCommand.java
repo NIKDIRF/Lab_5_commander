@@ -13,4 +13,9 @@ public class ExitCommand implements Command{
     public void execute() {
         this.receiver.exit();
     }
+
+    @Override
+    public void execute(String argument) {
+
+    }
 }

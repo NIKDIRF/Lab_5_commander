@@ -13,4 +13,9 @@ public class PrintFieldDescendingFormOfEducationCommand implements Command{
     public void execute() {
         this.receiver.printFieldDescendingFormOfEducation();
     }
+
+    @Override
+    public void execute(String argument) {
+
+    }
 }

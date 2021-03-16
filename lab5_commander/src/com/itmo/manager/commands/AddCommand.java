@@ -13,4 +13,9 @@ public class AddCommand implements Command{
     public void execute() {
         this.receiver.add();
     }
+
+    @Override
+    public void execute(String argument) {
+
+    }
 }

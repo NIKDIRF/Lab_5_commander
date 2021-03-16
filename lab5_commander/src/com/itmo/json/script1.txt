@@ -14,7 +14,7 @@ sanya
 3
 42
 1
-190.5
+190,5
 1
 2
 1
@@ -22,4 +22,5 @@ sanya
 26
 87
 mars
-save
+execute_script D:\progger\GitHub\lab5_commander\src\com\itmo\json\script1.txt
+info

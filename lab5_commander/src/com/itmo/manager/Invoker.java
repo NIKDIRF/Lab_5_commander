@@ -51,8 +51,8 @@ public class Invoker {
         this.addCommand.execute();
     }
 
-    public void removeById() {
-        this.removeByIdCommand.execute();
+    public void removeById(String argument) {
+        this.removeByIdCommand.execute(argument);
     }
 
     public void clear() {
@@ -71,8 +71,8 @@ public class Invoker {
         this.infoCommand.execute();
     }
 
-    public void update() {
-        this.updateCommand.execute();
+    public void update(String argument) {
+        this.updateCommand.execute(argument);
     }
 
     public void addIfMax() {

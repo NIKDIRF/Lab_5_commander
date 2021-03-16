@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 public class StudyStream {
-    private Collection<StudyGroup> studyGroups = new HashSet<StudyGroup>();
-    private LocalDateTime initializationDate;
+    private static Collection<StudyGroup> studyGroups = new HashSet<StudyGroup>();
+    private static LocalDateTime initializationDate;
     private Collection<Long> unique = new HashSet<Long>();
     private Collection<Long> duplicate = new HashSet<Long>();
     private File source;
@@ -53,6 +53,10 @@ public class StudyStream {
 
     }
 
+    public StudyStream() {
+
+    }
+
     public StudyStream(String jsonData) {
         this.initializationDate = LocalDateTime.now();
         try {
@@ -62,10 +66,16 @@ public class StudyStream {
             System.exit(1);
         }
         File file = new File(jsonData);
+        try {
+            if (!file.canRead() || !file.canWrite()) throw new SecurityException();
+        } catch (SecurityException ex) {
+            System.out.println("Файл защищён от чтения или записи. Для работы программы нужны оба разрешения.");
+            System.exit(1);
+        }
         this.source = file;
         try {
             FlexibleReader reader = new FlexibleReader(new FileInputStream(file));
-            this.studyGroups = reader.getJsonFileToCollection();
+            studyGroups = reader.getJsonFileToCollection();
 
         } catch (FileNotFoundException ex) {
             System.out.println("Файл по указанному пути отсутствует.");
@@ -75,28 +85,28 @@ public class StudyStream {
     }
 
     public void add(StudyGroup studyGroup) {
-        this.studyGroups.add(studyGroup);
+        studyGroups.add(studyGroup);
     }
 
     public void remove(StudyGroup studyGroup) {
-        this.studyGroups.remove(studyGroup);
+        studyGroups.remove(studyGroup);
     }
 
     public void clear() {
-        this.studyGroups.clear();
+        studyGroups.clear();
         IdControl.clearIdControl();
     }
 
     public boolean contains(StudyGroup studyGroup) {
-        return this.studyGroups.contains(studyGroup);
+        return studyGroups.contains(studyGroup);
     }
 
     public Integer size() {
-        return this.studyGroups.size();
+        return studyGroups.size();
     }
 
     public Collection<StudyGroup> getCollection() {
-        return this.studyGroups;
+        return studyGroups;
     }
 
     public void collectionInfo() {

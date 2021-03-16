@@ -13,4 +13,9 @@ public class AddIfMaxCommand implements Command{
     public void execute() {
         this.receiver.addIfMax();
     }
+
+    @Override
+    public void execute(String argument) {
+
+    }
 }

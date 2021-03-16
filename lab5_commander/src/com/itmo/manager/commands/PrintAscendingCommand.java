@@ -13,4 +13,9 @@ public class PrintAscendingCommand implements Command{
     public void execute() {
         this.receiver.printAscending();
     }
+
+    @Override
+    public void execute(String argument) {
+
+    }
 }

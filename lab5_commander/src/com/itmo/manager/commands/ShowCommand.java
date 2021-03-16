@@ -13,4 +13,10 @@ public class ShowCommand implements Command{
     public void execute() {
         this.receiver.show();
     }
+
+    @Override
+    public void execute(String argument) {
+
+    }
+
 }

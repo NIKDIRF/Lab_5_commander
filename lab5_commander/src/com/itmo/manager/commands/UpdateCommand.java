@@ -11,6 +11,11 @@ public class UpdateCommand implements Command{
 
     @Override
     public void execute() {
-        this.receiver.update();
+
+    }
+
+    @Override
+    public void execute(String argument) {
+        this.receiver.update(argument);
     }
 }

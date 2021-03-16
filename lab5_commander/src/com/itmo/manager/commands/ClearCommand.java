@@ -13,4 +13,9 @@ public class ClearCommand implements Command{
     public void execute() {
         this.receiver.clear();
     }
+
+    @Override
+    public void execute(String argument) {
+
+    }
 }

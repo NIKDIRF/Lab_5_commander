@@ -11,7 +11,7 @@ import java.io.*;
 import java.util.*;
 
 public class Receiver {
-    private InputStream inputStream;
+    private StudyStream studyStream;
     private boolean scriptState;
     private boolean success;
     private File source;
@@ -19,6 +19,7 @@ public class Receiver {
     public Receiver(boolean scriptState, File source) {
         this.scriptState = scriptState;
         this.source = source;
+        this.studyStream = new StudyStream();
     }
 
     /**
@@ -26,19 +27,20 @@ public class Receiver {
      */
     public void add() {
         try {
-            System.out.println("!!!!");
             if (!scriptState) {
                 ClientManager.refresh();
             }
             StudyGroup studyGroup = ClientManager.readElement();
-            System.out.println("элемент считан");
-            ClientManager.addToStudyStream(studyGroup);
+            this.studyStream.add(studyGroup);
             this.success = true;
             if (!scriptState) {
                 ClientManager.refresh();
             }
         } catch (Exception ex) {
-            System.out.println("Вы допустили ошибку при вводе параметров группы. Попробуйте снова, предварительно введя команду add ещё раз.");
+            System.out.print("Вы допустили ошибку при вводе параметров группы");
+            if (!scriptState) {
+                System.out.println("Попробуйте снова, предварительно введя команду add ещё раз.");
+            }
             this.success = false;
         }
     }
@@ -47,27 +49,27 @@ public class Receiver {
      * Удаляет все элементы коллекции.
      */
     public void clear() {
-        ClientManager.clearStudyStream();
-        StudyStream.IdControl.clearIdControl();
+//        ClientManager.clearStudyStream();
+//        StudyStream.IdControl.clearIdControl();
+        this.studyStream.clear();
         this.success = true;
     }
 
     /**
      * Удаляет элемент коллекции согласно считанному id.
      */
-    public void removeById() {
+    public void removeById(String argument) {
         try {
-            Integer id = ClientManager.readInteger();
+            Integer id = new Integer(argument);
             try {
                 if (!StudyStream.IdControl.checkIdControl(id)) throw new NumberFormatException();
-                Iterator<StudyGroup> i = ClientManager.getCollection().iterator();
+                Iterator<StudyGroup> i = studyStream.getCollection().iterator();
                 StudyGroup studyGroup;
                 while (i.hasNext()) {
                     studyGroup = i.next();
                     if (id == studyGroup.getId()) {
                         StudyStream.IdControl.removeFromIdControl(studyGroup.getId());
-                        System.out.println(studyGroup.getId());
-                        ClientManager.removeFromStudyStream(studyGroup);
+                        studyStream.remove(studyGroup);
                         this.success = true;
                         if (!scriptState) {
                             ClientManager.refresh();
@@ -98,7 +100,7 @@ public class Receiver {
      */
     public void save() {
         Saver saver = new Saver(source);
-        saver.saveToFile(ClientManager.getCollection());
+        saver.saveToFile(studyStream.getCollection());
     }
 
     /**
@@ -127,7 +129,7 @@ public class Receiver {
      * Выводит на экран информацию о коллекции.
      */
     public void info() {
-        ClientManager.collectionInfo();
+        studyStream.collectionInfo();
         if (!scriptState) {
             ClientManager.refresh();
         }
@@ -136,8 +138,8 @@ public class Receiver {
     /**
      * Обновляет значение элемента коллекции по считанному id.
      */
-    public void update() {
-        removeById();
+    public void update(String argument) {
+        removeById(argument);
         if (!scriptState) {
             ClientManager.refresh();
         }
@@ -151,15 +153,13 @@ public class Receiver {
      */
     public void addIfMax() {
         try {
-            System.out.println("!!!!");
             if (!scriptState) {
                 ClientManager.refresh();
             }
             StudyGroup studyGroup = ClientManager.readElement();
-            if (ClientManager.getSortedCollection().last().compareTo(studyGroup) == -1) {
-                ClientManager.addToStudyStream(studyGroup);
+            if (studyStream.sortedCollection().last().compareTo(studyGroup) == -1) {
+                studyStream.add(studyGroup);
             }
-            System.out.println("!" + ClientManager.getCollection().size());
             this.success = true;
             if (!scriptState) {
                 ClientManager.refresh();
@@ -179,13 +179,13 @@ public class Receiver {
                 ClientManager.refresh();
             }
             StudyGroup studyGroup = ClientManager.readElement();
-            Collection<StudyGroup> studyGroups = ClientManager.getSortedCollection().tailSet(studyGroup);
+            Collection<StudyGroup> studyGroups = studyStream.sortedCollection().tailSet(studyGroup);
             Iterator<StudyGroup> i = studyGroups.iterator();
             StudyGroup group;
             while (i.hasNext()) {
                 group = i.next();
+                studyStream.remove(group);
                 StudyStream.IdControl.removeFromIdControl(group.getId());
-                ClientManager.removeFromStudyStream(group);
             }
             this.success = true;
             if (!scriptState) {
@@ -206,14 +206,13 @@ public class Receiver {
                 ClientManager.refresh();
             }
             StudyGroup studyGroup = ClientManager.readElement();
-            Collection<StudyGroup> studyGroups = ClientManager.getSortedCollection().headSet(studyGroup);
+            Collection<StudyGroup> studyGroups = studyStream.sortedCollection().headSet(studyGroup);
             Iterator<StudyGroup> i = studyGroups.iterator();
             StudyGroup group;
             while (i.hasNext()) {
                 group = i.next();
+                studyStream.remove(group);
                 StudyStream.IdControl.removeFromIdControl(group.getId());
-                System.out.println(group.getStudentsCount());
-                ClientManager.removeFromStudyStream(group);
             }
             this.success = true;
             if (!scriptState) {
@@ -229,7 +228,7 @@ public class Receiver {
      * Выводит уникальные значения поля expelledStudents всех элементов в коллекции.
      */
     public void printUniqueExpelledStudents() {
-        Collection<Long> unique = ClientManager.getUnique();
+        Collection<Long> unique = studyStream.getUnique();
         Iterator<Long> i = unique.iterator();
         while (i.hasNext()) {
             System.out.print(i.next() + " ");
@@ -242,7 +241,7 @@ public class Receiver {
      */
     public void printFieldDescendingFormOfEducation() {
         List<FormOfEducation> formsOfEducations = new ArrayList<>();
-        Collection<StudyGroup> studyGroups = ClientManager.getCollection();
+        Collection<StudyGroup> studyGroups = studyStream.getCollection();
         Iterator<StudyGroup> i = studyGroups.iterator();
         while (i.hasNext()) {
             formsOfEducations.add(i.next().getFormOfEducation());
@@ -259,7 +258,7 @@ public class Receiver {
      * Выводит в стандартный поток вывода все элементы коллекции в строковом представлении.
      */
     public void show() {
-        Collection<StudyGroup> studyGroups = ClientManager.getCollection();
+        Collection<StudyGroup> studyGroups = studyStream.getCollection();
         Iterator<StudyGroup> i = studyGroups.iterator();
         StudyGroup studyGroup;
         while (i.hasNext()) {
@@ -318,7 +317,7 @@ public class Receiver {
      * Выводит элементы коллекции в порядке возрастания.
      */
     public void printAscending() {
-        Collection<StudyGroup> studyGroups = ClientManager.getSortedCollection();
+        Collection<StudyGroup> studyGroups = studyStream.sortedCollection();
         Iterator<StudyGroup> i = studyGroups.iterator();
         StudyGroup studyGroup;
         while (i.hasNext()) {

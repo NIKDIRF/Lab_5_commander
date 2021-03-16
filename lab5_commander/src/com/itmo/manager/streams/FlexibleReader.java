@@ -6,6 +6,7 @@ import com.google.gson.reflect.TypeToken;
 import com.itmo.studyStream.StudyStream;
 import com.itmo.studyStream.studyGroup.*;
 
+import javax.swing.plaf.synth.SynthOptionPaneUI;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -15,7 +16,7 @@ import java.util.Scanner;
 
 
 /**
- * Реализует считывание и парсинг данных.
+ * Реализует чтение и парсинг данных.
  */
 public class FlexibleReader {
     private InputStream inputStream;
@@ -46,22 +47,6 @@ public class FlexibleReader {
         return scanner.hasNext();
     }
 
-    /**
-     * Возвращет считываемое число из потока ввода.
-     * @return Возвращаемое число.
-     */
-    public Integer ReadInteger() {
-        //System.out.println("Вводим число " + messageToggle);
-
-
-        if (scanner.hasNextInt()) {
-            return scanner.nextInt();
-        } else {
-            if (messageToggle)
-                System.out.println("Вы должны были ввести число.");
-            return null;
-        }
-    }
 
     /**
      * Возвращет считываемую строку из потока ввода.
@@ -70,12 +55,7 @@ public class FlexibleReader {
     public String ReadString() {
         if (messageToggle)
             scanner = new Scanner(inputStream);
-        //System.out.println("вводим команду из " + inputStream);
         return scanner.nextLine().trim();
-    }
-
-    public void saveToFile() {
-
     }
 
 
@@ -84,36 +64,43 @@ public class FlexibleReader {
      * @return Возвращаемая коллекция.
      */
     public Collection<StudyGroup> getJsonFileToCollection() {
-        this.inputLine = scanner.nextLine();
-        try {
-            Collection<StudyGroup> loadStudyStream = serializer.fromJson(inputLine, new TypeToken<HashSet<StudyGroup>>() {}.getType());
-            Iterator<StudyGroup> i = loadStudyStream.iterator();
-            StudyGroup checker;
+        if (scanner.hasNext()) {
+            this.inputLine = scanner.nextLine();
             try {
-                while (i.hasNext()) {
-                    checker = i.next();
+                Collection<StudyGroup> loadStudyStream = serializer.fromJson(inputLine, new TypeToken<HashSet<StudyGroup>>() {
+                }.getType());
+                Iterator<StudyGroup> i = loadStudyStream.iterator();
+                StudyGroup checker;
+                try {
+                    while (i.hasNext()) {
+                        checker = i.next();
 
-                    if (StudyStream.IdControl.checkIdControl(checker.getId())) {
-                        throw new NumberFormatException();
-                    } else {
-                        try {
-                            if (checker.getId() <= 0)
-                                throw new NumberFormatException();
-                        } catch (NumberFormatException ex) {
-                            System.out.println("В исходном файле найден id меньший 1, исправьте и попробуйте снова.");
+                        if (StudyStream.IdControl.checkIdControl(checker.getId())) {
+                            throw new NumberFormatException();
+                        } else {
+                            try {
+                                if (checker.getId() <= 0)
+                                    throw new NumberFormatException();
+                            } catch (NumberFormatException ex) {
+                                System.out.println("В исходном файле найден id меньший 1, исправьте и попробуйте снова.");
+                            }
+                            StudyStream.IdControl.addToIdControl(checker.getId());
                         }
-                        StudyStream.IdControl.addToIdControl(checker.getId());
-                        //System.out.println("(((" + checker.getId());
                     }
+                    studyStream = loadStudyStream;
+                } catch (NumberFormatException ex) {
+                    System.out.println("В исходном файле найдены повторяющиеся id, исправьте и попробуйте снова.");
+                    System.exit(1);
                 }
-                studyStream = loadStudyStream;
-            } catch (NumberFormatException ex) {
-                System.out.println("В исходном файле найдены повторяющиеся id, исправьте и попробуйте снова.");
+                return studyStream;
+            } catch (JsonSyntaxException ex) {
+                System.out.println("Нарушен синтаксис Json.");
                 System.exit(1);
+                return studyStream;
             }
-            return studyStream;
-        } catch (JsonSyntaxException ex) {
-            System.out.println("Нарушен синтаксис Json.");
+        } else {
+            System.out.println("Исходный файл пуст.");
+            System.exit(1);
             return studyStream;
         }
     }
@@ -142,17 +129,16 @@ public class FlexibleReader {
         if (name.isEmpty())
             throw new NumberFormatException();
 
-
         double x = 0;
         if (messageToggle)
             System.out.println("Введите координату по X:");
         x = scanner.nextDouble();
 
+
         double y = 0;
         if (messageToggle)
             System.out.println("Введите координату по Y:");
         y = scanner.nextDouble();
-
         coordinates = new Coordinates(x, y);
 
         creationDate = LocalDateTime.now();
@@ -175,6 +161,7 @@ public class FlexibleReader {
         if (messageToggle)
             System.out.println("Выбор формата обучения:\nНажмите 1 для выбора дистанционного формата...\nНажмите 2 для выбора очного формата...\nНажмите 3 для выбора вечернего формата...");
         int form = scanner.nextInt();
+
         switch (form) {
             case (1) :
                 formOfEducation = FormOfEducation.DISTANCE_EDUCATION;
@@ -189,11 +176,14 @@ public class FlexibleReader {
                 throw new IllegalStateException("Unexpected value: " + form);
         }
 
-        if (messageToggle)
-            System.out.println("Введите данные старосты группы...\nИмя старосты:\n*Старосте нельзя остаться без имени*");
         String adminName;
-        if (messageToggle)
+        if (messageToggle) {
+            System.out.println("Введите данные старосты группы...\nИмя старосты:\n*Старосте нельзя остаться без имени*");
             scanner = new Scanner(System.in);
+        } else {
+            adminName = scanner.nextLine();
+        }
+
         adminName = scanner.nextLine();
         if (adminName.isEmpty()) throw new NumberFormatException();
 
@@ -208,19 +198,24 @@ public class FlexibleReader {
                 if (messageToggle)
                     System.out.println("Год:");
                 int year = scanner.nextInt();
+
                 if (messageToggle)
                     System.out.println("Месяц:");
                 int month = scanner.nextInt();
+
                 if (messageToggle)
                     System.out.println("День:");
                 int day = scanner.nextInt();
+
                 if (messageToggle)
                     System.out.println("Час:");
                 int hour = scanner.nextInt();
+
                 if (messageToggle)
                     System.out.println("Минута:");
                 int minute = scanner.nextInt();
-                    adminBirthday = LocalDateTime.of(year, month, day, hour, minute);
+
+                adminBirthday = LocalDateTime.of(year, month, day, hour, minute);
             } else {
                 adminBirthday = null;
             }
@@ -255,6 +250,7 @@ public class FlexibleReader {
                     System.out.println("Нажмите 1 если староста родом из России...\nНажмите 2 если староста родом из Ватикана...\nНажмите 3 если староста родом из Италии...\nНажмите 4 если староста родом из Японии...");
                 }
                 form = scanner.nextInt();
+
                 switch (form) {
                     case (1) :
                         nationality = Country.RUSSIA;
@@ -291,17 +287,24 @@ public class FlexibleReader {
                     System.out.println("Введите координату по X:");
                 }
                 locationX = scanner.nextInt();
+
                 if (messageToggle)
                     System.out.println("Введите координату по Y:");
                 locationY = scanner.nextLong();
+
                 if (messageToggle)
                     System.out.println("Введите координату по Z:");
                 locationZ = scanner.nextLong();
-                if (messageToggle)
+
+                if (messageToggle) {
                     System.out.println("Введите название локации где сейчас находится староста:\n*Мы должны знать хотя бы название*");
-                if (messageToggle)
                     scanner = new Scanner(System.in);
+                } else {
+                    String p = scanner.nextLine();
+                }
+
                 locationName = scanner.nextLine().trim();
+
                 if (locationName.isEmpty()) throw new NumberFormatException();
 
             }

@@ -13,4 +13,9 @@ public class PrintUniqueExpelledStudentsCommand implements Command{
     public void execute() {
         this.receiver.printUniqueExpelledStudents();
     }
+
+    @Override
+    public void execute(String argument) {
+
+    }
 }

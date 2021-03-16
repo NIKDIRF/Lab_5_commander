@@ -13,4 +13,9 @@ public class InfoCommand implements Command{
     public void execute() {
         this.receiver.info();
     }
+
+    @Override
+    public void execute(String argument) {
+
+    }
 }
